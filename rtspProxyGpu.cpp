@@ -177,8 +177,7 @@ onvif_factory_init(OnvifFactory * factory)
 {
 }
 
-gboolean
-link_element_to_streammux_sink_pad (GstElement *streammux, GstElement *elem,
+gboolean link_element_to_streammux_sink_pad (GstElement *streammux, GstElement *elem,
     gint index)
 {
   gboolean ret = FALSE;
@@ -218,8 +217,7 @@ done:
   return ret;
 }
 
-static GstElement *
-rtsp_create_element(GstRTSPMediaFactory * factory,
+static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory,
 	const GstRTSPUrl * url)
 {
 	char format[100] = "video/x-raw,format=(string)RGBA,width=(int)%d,height=(int)%d";
@@ -401,16 +399,14 @@ fail:
 	goto done;
 }
 
-static void
-onvif_factory_class_init(OnvifFactoryClass * klass)
+static void onvif_factory_class_init(OnvifFactoryClass * klass)
 {
 	GstRTSPMediaFactoryClass *mf_class = GST_RTSP_MEDIA_FACTORY_CLASS(klass);
 	//mf_class->create_element = onvif_factory_create_element;
 	mf_class->create_element = rtsp_create_element;
 }
 
-static GstRTSPMediaFactory *
-onvif_factory_new(void)
+static GstRTSPMediaFactory * onvif_factory_new(void)
 {
 	GstRTSPMediaFactory *result;
 
@@ -437,9 +433,8 @@ static void on_request(GstRTSPClient *client, GstRTSPContext *ctx, GstRTSPServer
 }
 
 
-static void on_client_new_session(GstRTSPClient * self,
-	GstRTSPSession * object,
-	gpointer user_data) {
+static void on_client_new_session(GstRTSPClient * self, GstRTSPSession * object, gpointer user_data) 
+{
 	g_print("New session\n\n");
 	gst_rtsp_session_set_timeout(object, 20);
 }

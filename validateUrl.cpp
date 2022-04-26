@@ -7,12 +7,6 @@
 
 using namespace std;
 
-/* Structure to contain all our information, so we can pass it around */
-// typedef struct _CustomData {
-//   GstDiscoverer *discoverer;
-//   GMainLoop *loop;
-// } CustomData;
-
 gchar * codec = NULL;
 
 bool validate_url(string url) {
