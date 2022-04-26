@@ -1,4 +1,3 @@
-
 /* GStreamer
 * Copyright (C) 2019 Mathieu Duponchelle <mathieu@centricular.com>
 *
@@ -26,6 +25,7 @@
 #include <gst/rtsp-server/rtsp-server.h>
 #include "server0audio.hpp"
 #include "validateUrl.hpp"
+#include "rtspProxyGpu.hpp"
 #include <glib.h>
 #include <gst/gst.h>
 #include <gio/gnetworking.h>
@@ -95,8 +95,8 @@ struct Stream
 	int height = 0;
 	int width = 0;
 };
-
 static Stream transcoding_stream[MAX_STREAM];
+
 static int check_rc(int rc){
 	return !(rc == VIDENC_CONSTANT_BITRATE || rc == VIDENC_VARIABLE_BITRATE);
 }
