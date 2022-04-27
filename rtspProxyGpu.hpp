@@ -1,7 +1,5 @@
 #include <iostream>
 #include <gst/gst.h>
-#include <gst/rtsp-server/rtsp-server.h>
-#include <gst/rtsp/gstrtspconnection.h>
 #include "json.hpp"
 
 using json = nlohmann::json;

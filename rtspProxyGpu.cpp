@@ -8,7 +8,7 @@
 *
 * This library is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 * Library General Public License for more details.
 *
 * You should have received a copy of the GNU Library General Public
@@ -17,11 +17,8 @@
 * Boston, MA 02110-1301, USA.
 */
 #include <iostream>
-#include <cstdlib>
 #include <glib.h>
 #include <gst/gst.h>
-#include <gst/rtsp-server/rtsp-server.h>
-#include <gst/rtsp/gstrtspconnection.h>
 #include "json.hpp"
 #include "server0audio.hpp"
 #include "validateUrl.hpp"
@@ -60,13 +57,10 @@ G_STMT_START { \
 #define DEFAULT_BIT_RATE_PROFILE 4000000
 #define MAX_STREAM 10
 
-// static gchar *port = NULL;
 static gchar *username = NULL;
 static gchar *password = NULL;
 static gchar *stream1 = NULL;
 static gchar *stream2 = NULL;
-// static gchar *stream_config_file =NULL;
-
 
 static int bitrate1 = 1;
 static int bitrate2 = 1; 
@@ -79,8 +73,8 @@ static int stream_count = 0;
 string uri_str[MAX_STREAM];
 gchar * input_codec_str[MAX_STREAM];
 string output_codec_str[MAX_STREAM];
-struct Stream
-{
+
+struct Stream {
 	gchar *stream = NULL;
 	int bitrate = 0;
 	gchar *inputCodec = NULL;
@@ -90,22 +84,19 @@ struct Stream
 };
 static Stream transcoding_stream[MAX_STREAM];
 
-static int check_rc(int rc){
+static int check_rc(int rc) {
 	return !(rc == VIDENC_CONSTANT_BITRATE || rc == VIDENC_VARIABLE_BITRATE);
 }
 
-static int check_iframe(int iframe){ 
+static int check_iframe(int iframe) { 
 	return iframe >= IFRAME_MIN && iframe <= IFRAME_MAX;
 }
 
-static int check_profile(int prof){
+static int check_profile(int prof) {
 	return !(prof == PROF_BASELINE || prof == PROF_MAIN || prof == PROF_HIGH);
 }
 
-
-static void
-enc_pad_added(GstElement * x264enc, GstPad * pad, GstGhostPad * ghost)
-{
+static void enc_pad_added(GstElement * x264enc, GstPad * pad, GstGhostPad * ghost) {
 	GstCaps *caps = gst_pad_get_current_caps(pad);
 	GstStructure *s = gst_caps_get_structure(caps, 0);
 
@@ -115,9 +106,7 @@ enc_pad_added(GstElement * x264enc, GstPad * pad, GstGhostPad * ghost)
 	gst_caps_unref(caps);
 }
 
-void
-pad_added_cb(GstElement * src, GstPad * srcpad, GstElement * peer)
-{
+void pad_added_cb(GstElement * src, GstPad * srcpad, GstElement * peer) {
 	//g_print("Pad added\n");
 	GstPad *sinkpad = gst_element_get_static_pad(peer, "sink");
 
@@ -127,8 +116,7 @@ pad_added_cb(GstElement * src, GstPad * srcpad, GstElement * peer)
 }
 
 
-void makeAuth(GstRTSPMediaFactory *factory, GstRTSPServer *server)
-{
+void makeAuth(GstRTSPMediaFactory *factory, GstRTSPServer *server) {
 	//Check if username and password is not null, make authentiacte, else 
 	if (username == NULL || password == NULL) {
 		g_print("Authentiaction is not set!!!\n");
@@ -158,8 +146,7 @@ void makeAuth(GstRTSPMediaFactory *factory, GstRTSPServer *server)
 }
 
 /* A simple factory to set up our replay bin */
-struct _OnvifFactory
-{
+struct _OnvifFactory {
 	GstRTSPMediaFactory parent;
 };
 
@@ -167,8 +154,7 @@ G_DEFINE_TYPE(OnvifFactory, onvif_factory, GST_TYPE_RTSP_MEDIA_FACTORY);
 
 static void onvif_factory_init(OnvifFactory * factory) {}
 
-gboolean link_element_to_streammux_sink_pad (GstElement *streammux, GstElement *elem, gint index)
-{
+gboolean link_element_to_streammux_sink_pad (GstElement *streammux, GstElement *elem, gint index) {
 	gboolean ret = FALSE;
 	GstPad *mux_sink_pad = NULL;
 	GstPad *src_pad = NULL;
@@ -208,8 +194,7 @@ done:
 	return ret;
 }
 
-static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
-{
+static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const GstRTSPUrl * url) {
 	char format[100] = "video/x-raw,format=(string)RGBA,width=(int)%d,height=(int)%d";
 	char filter[120];
 	gchar *path = NULL;
@@ -288,14 +273,14 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	streamUrl =transcoding_stream[stream_index].stream;
 	bitrate = transcoding_stream[stream_index].bitrate;
 
-	if (!streamUrl || bitrate  == 0) {
+	if (!streamUrl || bitrate == 0) {
 		g_print("Error: stream is NULL or bitrate is not setted\n");
 	} else {
 		g_print("Connect to %s, codec:%s, ", streamUrl, transcoding_stream[stream_index].inputCodec);
 	}
 	g_object_set(src, "location", streamUrl, NULL);
-    g_object_set (G_OBJECT (src), "latency", 1000, NULL);
-    g_object_set (G_OBJECT (src), "drop-on-latency", TRUE, NULL);
+	g_object_set (G_OBJECT (src), "latency", 1000, NULL);
+	g_object_set (G_OBJECT (src), "drop-on-latency", TRUE, NULL);
 	
 	gst_bin_add(GST_BIN(ret), pbin);
 
@@ -341,15 +326,15 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 		printf("Set scale width: %d, height: %d\n", width, height);
 
 		MAKE_AND_ADD(scale, pbin, "nvstreammux", fail, NULL);
-		g_object_set(G_OBJECT(scale), "height", height , NULL);
+		g_object_set(G_OBJECT(scale), "height", height, NULL);
 		g_object_set(G_OBJECT(scale), "width", width, NULL);
 		g_object_set(G_OBJECT(scale), "batch-size", 1, NULL);
 
-		if(!link_element_to_streammux_sink_pad(scale,dec,0)){
+		if (!link_element_to_streammux_sink_pad(scale, dec, 0)) {
 			g_print("Link steammux false\n");
 			goto fail;
 		}	
-		if (!gst_element_link_many(scale,enc,pay ,NULL)) {
+		if (!gst_element_link_many(scale, enc, pay ,NULL)) {
 			g_print("Link filter false\n");
 			goto fail;
 		}
@@ -386,15 +371,13 @@ fail:
 	goto done;
 }
 
-static void onvif_factory_class_init(OnvifFactoryClass * klass)
-{
+static void onvif_factory_class_init(OnvifFactoryClass * klass) {
 	GstRTSPMediaFactoryClass *mf_class = GST_RTSP_MEDIA_FACTORY_CLASS(klass);
 	//mf_class->create_element = onvif_factory_create_element;
 	mf_class->create_element = rtsp_create_element;
 }
  
-GstRTSPMediaFactory * onvif_factory_new(void)
-{
+GstRTSPMediaFactory * onvif_factory_new(void) {
 	GstRTSPMediaFactory *result;
 
 	result =
@@ -420,15 +403,13 @@ static void on_request(GstRTSPClient *client, GstRTSPContext *ctx, GstRTSPServer
 }*/
 
 
-static void on_client_new_session(GstRTSPClient * self, GstRTSPSession * object, gpointer user_data) 
-{
+static void on_client_new_session(GstRTSPClient * self, GstRTSPSession * object, gpointer user_data) {
 	g_print("New session\n\n");
 	gst_rtsp_session_set_timeout(object, 20);
 }
 
 // Handle when client connected
-void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointer user_data)
-{
+void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointer user_data) {
 	g_print("Client connected\n");
 	g_signal_connect_object(client, "new-session", G_CALLBACK(on_client_new_session), NULL, G_CONNECT_AFTER);
 
@@ -441,7 +422,7 @@ void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointe
 
 
 int parse_streams_from_json (json jsonData) {
-    // Access fields from JSON object
+	// Access fields from JSON object
 	for(auto &arr: jsonData["streams"]){
 		uri_str[stream_count] = arr.at("stream_uri").get<string>();
 		if (!validate_url(uri_str[stream_count])) {

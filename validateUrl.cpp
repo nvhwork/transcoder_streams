@@ -5,6 +5,8 @@
 #include <gst/pbutils/pbutils.h>
 #include "validateUrl.hpp"
 
+#define TIME_LIMIT_DISCOVER 30*GST_SECOND
+
 using namespace std;
 
 gchar * codec = NULL;
@@ -82,7 +84,7 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 	}
 
 	if (result != GST_DISCOVERER_OK) {
-		g_printerr ("This URI cannot be played\n");
+		g_printerr ("This URI cannot be played.\n");
 		codec = NULL;
 		return;
 	}
@@ -114,7 +116,7 @@ gchar * get_video_codec (string url) {
 	g_print ("Discovering '%s'\n", uri);
 
 	/* Instantiate the Discoverer */
-	data.discoverer = gst_discoverer_new (30 * GST_SECOND, &err);
+	data.discoverer = gst_discoverer_new (TIME_LIMIT_DISCOVER, &err);
 	if (!data.discoverer) {
 		g_print ("Error creating discoverer instance: %s\n", err->message);
 		g_clear_error (&err);
