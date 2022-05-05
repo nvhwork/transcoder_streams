@@ -426,7 +426,10 @@ int parse_streams_from_json (json jsonData) {
 	for(auto &arr: jsonData["streams"]){
 		uri_str[stream_count] = arr.at("stream_uri").get<string>();
 		if (!validate_url(uri_str[stream_count])) {
-			cout << "URL '" << uri_str[stream_count] << "' is not of RTSP type, or wrong format!" << endl << endl;
+			cout << "Discovering '" << uri_str[stream_count] << "'" << endl
+				<< "Discoverer error: URL is not of RTSP type, or wrong format" << endl
+				<< "This URI cannot be played" << endl << "Finish discovering" << endl
+				<< "Input video codec not found!" << endl << endl;
 			continue;
 		}
 

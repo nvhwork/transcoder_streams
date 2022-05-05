@@ -11,12 +11,12 @@
 using namespace std;
 
 gchar * codec = NULL;
-guint bitrate = -1;
-guint bitrate_max = -1;
-guint framerate_num = -1;
-guint framerate_denom = -1;
-guint height = -1;
-guint width = -1;
+int bitrate = -1;
+int bitrate_max = -1;
+int framerate_num = -1;
+int framerate_denom = -1;
+int height = -1;
+int width = -1;
 
 bool validate_url(string url) {
 	if (url.empty()) {
@@ -91,7 +91,7 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 	}
 
 	if (result != GST_DISCOVERER_OK) {
-		g_printerr ("This URI cannot be played.\n");
+		g_printerr ("This URI cannot be played\n");
 		codec = NULL;
 		return;
 	}
@@ -100,27 +100,27 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 	get_video_codec_in_tags (tags);
 
 	/* Get video information */
-	/*
-	GList * stream = gst_discoverer_info_get_video_streams (info);
-	do {
-		bitrate = gst_discoverer_video_info_get_bitrate (stream->data);
-		bitrate_max = gst_discoverer_video_info_get_max_bitrate (stream->data);
-		framerate_num = gst_discoverer_video_info_get_framerate_num (stream->data);
-		framerate_denom = gst_discoverer_video_info_get_framerate_denom (stream->data);
-		height = gst_discoverer_video_info_get_height (stream->data);
-		width = gst_discoverer_video_info_get_width (stream->data);
-		stream = stream->next;
-	} while (stream->next != NULL);
+	GList * stream = g_list_first ( gst_discoverer_info_get_video_streams (info) );
+	if (stream != NULL) {
+		bitrate = gst_discoverer_video_info_get_bitrate ((GstDiscovererVideoInfo*) stream->data);
+		bitrate_max = gst_discoverer_video_info_get_max_bitrate ((GstDiscovererVideoInfo*) stream->data);
+		framerate_num = gst_discoverer_video_info_get_framerate_num ((GstDiscovererVideoInfo*) stream->data);
+		framerate_denom = gst_discoverer_video_info_get_framerate_denom ((GstDiscovererVideoInfo*) stream->data);
+		height = gst_discoverer_video_info_get_height ((GstDiscovererVideoInfo*) stream->data);
+		width = gst_discoverer_video_info_get_width ((GstDiscovererVideoInfo*) stream->data);
+	} else {
+		cout << endl << "\tNULL error!" << endl;
+	}
 	gst_discoverer_stream_info_list_free (stream);
-	*/
+
 }
 
 /* This function is called when the discoverer has finished examining
  * all the URIs we provided.*/
 static void on_finished_cb (GstDiscoverer * discoverer, CustomData * data) {
-  g_print ("Finished discovering\n");
+	g_print ("Finished discovering\n");
 
-  g_main_loop_quit (data->loop);
+	g_main_loop_quit (data->loop);
 }
 
 gchar * get_video_codec (string url) {
@@ -175,10 +175,11 @@ gchar * get_video_codec (string url) {
 	g_free(codec);
 
 	/* Test print out video information */
-	/* cout << endl << "Bitrate: " << bitrate << " bps" << endl
-		<< "Max birate: " << bitrate_max << " bps" << endl
-		<< "Framerate: " << framerate_num << "/" << framerate_denom << endl
-		<< "Resolution: " << width << "x" << height << endl; */
-
+	if (bitrate != -1) {
+		cout << "**********************" << endl << "Bitrate: " << bitrate << " bps" 
+			<< endl << "Max birate: " << bitrate_max << " bps" << endl
+			<< "Framerate: " << framerate_num << "/" << framerate_denom << endl
+			<< "Resolution: " << width << "x" << height << endl; 
+	}
 	return resultCodec;
 }
