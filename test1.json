@@ -1,5 +1,5 @@
 {
-	"port":"8554",
+	"port":"8550",
 	"streams":[
 		{
 			"stream_uri":"rtsp://192.168.10.101",
@@ -15,13 +15,7 @@
 			"width":"1280",
 			"height":"720"
 		},
-		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.101",
-			"bitrate":"2",
-			"output_codec":"H.264",
-			"width":"1280",
-			"height":"720"
-		},
+		
 		{
 			"stream_uri":"rtsp:/admin:secam123@192.168.10.35",
 			"bitrate":"2",

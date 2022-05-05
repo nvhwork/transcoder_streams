@@ -1,15 +1,22 @@
 #include <iostream>
 #include <regex>
 #include <string.h>
+#include <glib.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
-#include "validateUrl.hpp"
+#include "checkStream.hpp"
 
 #define TIME_LIMIT_DISCOVER 30*GST_SECOND
 
 using namespace std;
 
 gchar * codec = NULL;
+guint bitrate = -1;
+guint bitrate_max = -1;
+guint framerate_num = -1;
+guint framerate_denom = -1;
+guint height = -1;
+guint width = -1;
 
 bool validate_url(string url) {
 	if (url.empty()) {
@@ -90,7 +97,22 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 	}
 
 	tags = gst_discoverer_info_get_tags (info);
-	get_video_codec_in_tags(tags);
+	get_video_codec_in_tags (tags);
+
+	/* Get video information */
+	/*
+	GList * stream = gst_discoverer_info_get_video_streams (info);
+	do {
+		bitrate = gst_discoverer_video_info_get_bitrate (stream->data);
+		bitrate_max = gst_discoverer_video_info_get_max_bitrate (stream->data);
+		framerate_num = gst_discoverer_video_info_get_framerate_num (stream->data);
+		framerate_denom = gst_discoverer_video_info_get_framerate_denom (stream->data);
+		height = gst_discoverer_video_info_get_height (stream->data);
+		width = gst_discoverer_video_info_get_width (stream->data);
+		stream = stream->next;
+	} while (stream->next != NULL);
+	gst_discoverer_stream_info_list_free (stream);
+	*/
 }
 
 /* This function is called when the discoverer has finished examining
@@ -124,10 +146,8 @@ gchar * get_video_codec (string url) {
 	}
 
 	/* Connect to the interesting signals */
-	g_signal_connect (data.discoverer, "discovered",
-		G_CALLBACK (on_discovered_cb), &data);
-	g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb),
-		&data);
+	g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
+	g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
 
 	/* Start the discoverer process (nothing to do yet) */
 	gst_discoverer_start (data.discoverer);
@@ -153,6 +173,12 @@ gchar * get_video_codec (string url) {
 	/* Return result of video codec */
 	resultCodec = g_strdup(codec);
 	g_free(codec);
+
+	/* Test print out video information */
+	/* cout << endl << "Bitrate: " << bitrate << " bps" << endl
+		<< "Max birate: " << bitrate_max << " bps" << endl
+		<< "Framerate: " << framerate_num << "/" << framerate_denom << endl
+		<< "Resolution: " << width << "x" << height << endl; */
 
 	return resultCodec;
 }
