@@ -51,19 +51,15 @@ G_STMT_START { \
 #define IFRAME_MIN 	0
 
 #define FIXED_BIT_RATE 1228000
-#define BIT_RATE_PROFILE_1 1000000
-#define BIT_RATE_PROFILE_2 2000000
-#define BIT_RATE_PROFILE_3 3000000
+// #define BIT_RATE_PROFILE_1 1000000
+// #define BIT_RATE_PROFILE_2 2000000
+// #define BIT_RATE_PROFILE_3 3000000
 #define DEFAULT_BIT_RATE_PROFILE 4000000
 #define MAX_STREAM 10
 
 static gchar *username = NULL;
 static gchar *password = NULL;
-static gchar *stream1 = NULL;
-static gchar *stream2 = NULL;
 
-static int bitrate1 = 1;
-static int bitrate2 = 1; 
 static int profile = PROF_BASELINE;
 static int iframeinterval = DEFAULT_INT;
 static int qos = 0;
@@ -289,15 +285,14 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	// if (qos){
 	// 	g_object_set(enc, "qos", TRUE, NULL);
 	// }
-	if (bitrate == 1) {
-		g_print("bitrate: %d Mb\n", BIT_RATE_PROFILE_1/1000000);
-		g_object_set(enc, "bitrate", BIT_RATE_PROFILE_1, NULL);
-	} else if (bitrate == 2) {
-		g_print("bitrate: %d Mb\n", BIT_RATE_PROFILE_2/1000000);
-		g_object_set(enc, "bitrate", BIT_RATE_PROFILE_2, NULL);
-	} else if (bitrate == 3) {
-		g_print("bitrate: %d Mb\n", BIT_RATE_PROFILE_3/1000000);
-		g_object_set(enc, "bitrate", BIT_RATE_PROFILE_3, NULL);
+	if (bitrate > 0 && bitrate < 8) {
+		g_print("bitrate: %d Mbps\n", bitrate);
+		g_object_set(enc, "bitrate", bitrate * 1000000, NULL);
+	} else {
+		g_print("Error: Invalid value of bitrate\n");
+		gst_object_unref(ret);
+		ret = NULL;
+		goto done;
 	}
 	// }else {
 	// 	g_print("bitrate: %d Mb\n", DEFAULT_BIT_RATE_PROFILE/1000000);

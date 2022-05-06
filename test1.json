@@ -9,13 +9,26 @@
 			"height":"720"
 		},
 		{
+			"stream_uri":"rtsp://admin:secam123@192.168.10.101",
+			"bitrate":"1",
+			"output_codec":"H.265",
+			"width":"640",
+			"height":"360"
+		},
+		{
 			"stream_uri":"http://admin:secam123@192.168.10.101",
 			"bitrate":"2",
 			"output_codec":"H.264",
 			"width":"1280",
 			"height":"720"
 		},
-		
+		{
+			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
+			"bitrate":"2",
+			"output_codec":"H.264",
+			"width":"640",
+			"height":"480"
+		},
 		{
 			"stream_uri":"rtsp:/admin:secam123@192.168.10.35",
 			"bitrate":"2",
@@ -24,15 +37,8 @@
 			"height":"576"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
-			"bitrate":"1",
-			"output_codec":"H.264",
-			"width":"640",
-			"height":"480"
-		},
-		{
 			"stream_uri":"rtsp://admin:secam123@192.168.10.103",
-			"bitrate":"2",
+			"bitrate":"3",
 			"output_codec":"H.265",
 			"width":"1280",
 			"height":"720"
@@ -43,6 +49,13 @@
 			"output_codec":"H.265",
 			"width":"640",
 			"height":"360"
+		},
+		{
+			"stream_uri":"rtsp://admin:secam123@192.168.10.103",
+			"bitrate":"7",
+			"output_codec":"H.264",
+			"width":"1920",
+			"height":"1080"
 		}
 	]
 }
