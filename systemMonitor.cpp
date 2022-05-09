@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -39,18 +40,18 @@ double getCurrentCpuValue() {
 		// Overflow detection. Just skip this value.
 		percent = -1.0;
 	} else {
-		cout << "\tLast:\t" << lastTotalUser << "\t" << lastTotalUserLow << "\t"
-					<< lastTotalSys << "\t" << lastTotalIdle << endl;
-		cout << "\t\t" << totalUser << "\t" << totalUserLow << "\t"
-					<< totalSys << "\t" << totalIdle << endl;
+		// cout << "\tLast:\t" << lastTotalUser << "\t" << lastTotalUserLow << "\t"
+		// 			<< lastTotalSys << "\t" << lastTotalIdle << endl;
+		// cout << "\t\t" << totalUser << "\t" << totalUserLow << "\t"
+		// 			<< totalSys << "\t" << totalIdle << endl;
 		total = (totalUser - lastTotalUser) + (totalUserLow - lastTotalUserLow)
 				+ (totalSys - lastTotalSys);
 		percent = total;
-		cout << "\tTotal 1: " << total << endl;
+		// cout << "\tTotal 1: " << total << endl;
 		total = total + (totalIdle - lastTotalIdle);
-		cout << "\tTotal 2: " << total << endl;
+		// cout << "\tTotal 2: " << total << endl;
 		percent /= total;
-		cout << "\tPercent: " << percent << endl;
+		// cout << "\tPercent: " << percent << endl;
 		percent *= 100;
 	}
 
@@ -67,19 +68,21 @@ double getCurrentCpuValue() {
 int main() {
 	sysinfo (&memInfo);
 
-	long long totalPhysMem = memInfo.totalram;
-	long long usedPhysMem = memInfo.totalram - getMemAvailable();
-	
 	// Multiply in next statement to avoid int overflow on right hand side
-	totalPhysMem *= memInfo.mem_unit;
-	usedPhysMem *= memInfo.mem_unit;
+	long long totalPhysMem = memInfo.totalram * memInfo.mem_unit;
+	long long usedPhysMem = (memInfo.totalram - getMemAvailable()) * memInfo.mem_unit;
+
+	// Divide to get the value in GB
+	double totalRamGB = (double) totalPhysMem / 1024 / 1000 / 1000;
+	double usedRamGB = (double) usedPhysMem / 1024 / 1000 / 1000;
 	
-	cout << "Total RAM: " << (double) totalPhysMem/1024/1000/1000 << " GB" << endl;
-	cout << "Currently used RAM: " << (double) usedPhysMem/1024/1000/1000 << " GB" << endl;
+	cout << setprecision(1) << fixed;
+	cout << setw(20) << "Total RAM: " << setw(4) << totalRamGB << " GB" << endl;
+	cout << setw(20) << "Currently used RAM: " << setw(4) << usedRamGB << " GB" << endl;
 	
 	// initGetCpu();
 	double currentCpu = getCurrentCpuValue();
-	cout << "Currently used CPU: " << currentCpu << "%" << endl;
+	cout << setw(20) << "Currently used CPU: " << setw(4) << currentCpu << " %" << endl;
 	
 	return 0;
 }
