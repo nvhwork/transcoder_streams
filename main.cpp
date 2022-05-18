@@ -104,11 +104,11 @@ int main(int argc, char *argv[]) {
 	// 	makeAuth(factory, server);
 	// }
 	
-	for(int i = 1; i <= num_of_streams; i++){
+	for (int i = 1; i <= num_of_streams; i++){
 		char init_uri[] = "/stream-";
 		string s = to_string(i);
-		char *index =(char*) s.c_str();
-		gst_rtsp_mount_points_add_factory(mounts, (const gchar*)strcat(init_uri,index), factory);
+		char *index = (char*) s.c_str();
+		gst_rtsp_mount_points_add_factory(mounts, (const gchar*)strcat(init_uri, index), factory);
 	}
 
 	g_object_unref(mounts);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 	for (int i = 1; i <= num_of_streams; i++) {
 		char init_uri[] = "/stream-";
 		string s = to_string(i);
-		char *index =(char*) s.c_str(); 
+		char *index = (char*) s.c_str(); 
 		cout << "rtsp://0.0.0.0:" << service << strcat(init_uri, index) << endl;
 	}
 	cout << endl;

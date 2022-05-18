@@ -26,8 +26,15 @@
 			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
 			"bitrate":"2",
 			"output_codec":"H.264",
-			"width":"640",
-			"height":"480"
+			"width":"1280",
+			"height":"720"
+		},
+		{
+			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
+			"bitrate":"4",
+			"output_codec":"H.265",
+			"width":"1920",
+			"height":"1080"
 		},
 		{
 			"stream_uri":"rtsp:/admin:secam123@192.168.10.35",

@@ -51,6 +51,25 @@ static void get_video_codec_in_tags (const GstTagList * tags) {
 	g_value_unset (&val);
 }
 
+int get_bitrate_in_tags (const GstTagList * tags) {
+	GValue val = { 0, };
+	gchar *str;
+	
+	gst_tag_list_copy_value (&val, tags, "bitrate");
+	if (!G_IS_VALUE (&val)) {
+		cout << "***BITRATE NOT FOUND***" << endl;
+		return -1;
+	}
+
+	if (G_VALUE_HOLDS_STRING (&val))
+		str = g_value_dup_string (&val);
+	else
+		str = gst_value_serialize (&val);
+
+	int br = atoi(str);
+	return br;
+}
+
 /* This function is called every time the discoverer has information regarding
  * one of the URIs we provided.*/
 static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * info,
@@ -98,6 +117,7 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 
 	tags = gst_discoverer_info_get_tags (info);
 	get_video_codec_in_tags (tags);
+	// bitrate = get_bitrate_in_tags (tags);
 
 	/* Get video information */
 	GList * stream = g_list_first ( gst_discoverer_info_get_video_streams (info) );

@@ -27,7 +27,7 @@
 using json = nlohmann::json;
 using namespace std;
 
-#define __ENABLE_OPTIONS
+// #define __ENABLE_OPTIONS
 #define MAKE_AND_ADD(var, pipe, name, label, elem_name) \
 G_STMT_START { \
 	if (G_UNLIKELY (!(var = (gst_element_factory_make (name, elem_name))))) { \
@@ -231,7 +231,6 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	if (input_codec.find("H.264") != string::npos && output_codec.find("H.264") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph264depay", fail, "depay");
-		// MAKE_AND_ADD(parse,ret,"h264parse",fail,"parse");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h264enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph264pay", fail, NULL);
@@ -239,7 +238,6 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	} else if (input_codec.find("H.265") != string::npos && output_codec.find("H.265") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph265depay", fail, "depay");
-		// MAKE_AND_ADD(parse,ret,"h265parse",fail,"parse");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h265enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph265pay", fail, NULL);
@@ -247,7 +245,6 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	} else if (input_codec.find("H.264") != string::npos && output_codec.find("H.265") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph264depay", fail, "depay");
-		// MAKE_AND_ADD(parse,ret,"h265parse",fail,"parse");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h265enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph265pay", fail, NULL);
@@ -255,7 +252,6 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	} else if (input_codec.find("H.265") != string::npos && output_codec.find("H.264") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph265depay", fail, "depay");
-		// MAKE_AND_ADD(parse,ret,"h265parse",fail,"parse");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h264enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph264pay", fail, NULL);
@@ -311,8 +307,8 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	// 	g_object_set(enc, "iframeinterval", iframeinterval, NULL);
 	// }
 #else
-	//fixed mode
-	g_object_set(enc, "bitrate", DEFAULT_BIT_RATE_PROFILE, NULL);
+	// fixed mode
+	// g_object_set(enc, "bitrate", DEFAULT_BIT_RATE_PROFILE, NULL);
 #endif
 
 #ifdef __CHANGE_RESOLUION
@@ -339,7 +335,8 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 			goto fail;
 		}
 	}
-	if(!gst_element_link_many(depay,dec,NULL)){
+	
+	if (!gst_element_link_many(depay, dec, NULL)){
 		g_print("Link many scale false\n");
 		goto fail;
 	}
