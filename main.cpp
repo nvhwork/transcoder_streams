@@ -8,7 +8,6 @@
 #include <gst/rtsp/gstrtspconnection.h>
 #include "rtspProxyGpu.hpp"
 
-#define __ENABLE_OPTIONS
 #define GST_CAT_DEFAULT (onvif_server_debug)
 
 GST_DEBUG_CATEGORY_STATIC(onvif_server_debug);
@@ -35,9 +34,8 @@ int main(int argc, char *argv[]) {
 		//{ "username", 'u', 0, G_OPTION_ARG_STRING, &username, "Username for authentication", NULL },
 		//{ "password", 'd', 0, G_OPTION_ARG_STRING, &password, "Password for authentication", NULL },
 		{ "config", 'c', 0,  G_OPTION_ARG_STRING, &stream_config_file, "Config file for RTSP streaming", NULL },
-#ifdef __ENABLE_OPTIONS
-			//videoscale option
-		#ifdef __CHANGE_RESOLUION
+			
+		#ifdef __CHANGE_RESOLUION // videoscale option
 		//{ "width", 'w', 0, G_OPTION_ARG_INT, &width, "Resize: width", NULL },
 		//{ "height", 'h', 0, G_OPTION_ARG_INT, &height, "Resize: height", NULL },
 		#endif
@@ -48,8 +46,6 @@ int main(int argc, char *argv[]) {
 		//{ "bitrate-2", 0, 0, G_OPTION_ARG_INT, &bitrate2, "encoder: bitrate profile ( 1 or 2 ) of output stream", NULL },
 		//{ "rc-mode", 'c', 0, G_OPTION_ARG_INT, &rc_mode, "encoder: bitrate mode", NULL },
 		//{ "iframeinterval", 'i', 0, G_OPTION_ARG_INT, &iframeinterval, "encoder: iframe interval", NULL },
-
-#endif
 		{ NULL }
 	};
 	optctx = g_option_context_new("RTSP PROXY");
@@ -63,7 +59,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	if (stream_config_file == NULL){
-		g_print("Config file not setted.\n");
+		g_print("Config file not set.\n");
 		return 1;
 	}
 

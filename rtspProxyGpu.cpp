@@ -27,7 +27,6 @@
 using json = nlohmann::json;
 using namespace std;
 
-// #define __ENABLE_OPTIONS
 #define MAKE_AND_ADD(var, pipe, name, label, elem_name) \
 G_STMT_START { \
 	if (G_UNLIKELY (!(var = (gst_element_factory_make (name, elem_name))))) { \
@@ -49,12 +48,6 @@ G_STMT_START { \
 #define VIDENC_CONSTANT_BITRATE 1
 #define IFRAME_MAX 	4294967295
 #define IFRAME_MIN 	0
-
-#define FIXED_BIT_RATE 1228000
-// #define BIT_RATE_PROFILE_1 1000000
-// #define BIT_RATE_PROFILE_2 2000000
-// #define BIT_RATE_PROFILE_3 3000000
-#define DEFAULT_BIT_RATE_PROFILE 4000000
 #define MAX_STREAM 10
 
 static gchar *username = NULL;
@@ -207,8 +200,8 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	gchar *camId = NULL;
 	guint64 timestamp;
 	gchar* streamUrl;
-	gint bitrate =0 ;
-	int stream_index=-1;
+	gint bitrate = 0 ;
+	int stream_index = -1;
 	int width, height;
 
 	g_print("Abs path: %s\n", url->abspath);
@@ -221,10 +214,12 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	}
 	if(stream_index<0) goto fail;
 
+	streamUrl =transcoding_stream[stream_index].stream;
 	input_codec = string(transcoding_stream[stream_index].inputCodec);
 	output_codec = string(transcoding_stream[stream_index].outputCodec);
 	height = transcoding_stream[stream_index].height;
 	width = transcoding_stream[stream_index].width;
+	// bitrate = transcoding_stream[stream_index].bitrate;
 
 	// Make video part
 	// rtspsrc ! rtph264depay ! nvv4l2decoder ! nvv4l2h264enc ! rtph264pay
@@ -262,26 +257,25 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 	g_signal_connect(src, "pad-added", G_CALLBACK(pad_added_cb), depay);
 
-	streamUrl =transcoding_stream[stream_index].stream;
-	bitrate = transcoding_stream[stream_index].bitrate;
-
-	if (!streamUrl || bitrate == 0) {
-		g_print("Error: stream is NULL or bitrate is not setted\n");
+	if (!streamUrl) {
+		g_print("Error: Stream is NULL\n");
 	} else {
-		g_print("Connect to %s, codec:%s, ", streamUrl, transcoding_stream[stream_index].inputCodec);
+		g_print("Connect to %s, codec: %s, ", streamUrl, input_codec.c_str());
 	}
 	g_object_set(src, "location", streamUrl, NULL);
-	g_object_set (G_OBJECT (src), "latency", 1000, NULL);
-	g_object_set (G_OBJECT (src), "drop-on-latency", TRUE, NULL);
+	g_object_set(G_OBJECT (src), "latency", 1000, NULL);
+	g_object_set(G_OBJECT (src), "drop-on-latency", TRUE, NULL);
 	
 	gst_bin_add(GST_BIN(ret), pbin);
 
-#ifdef __ENABLE_OPTIONS
-	// Change params
-	// if (qos){
-	// 	g_object_set(enc, "qos", TRUE, NULL);
-	// }
-	if (bitrate > 0 && bitrate < 8) {
+	// Set bitrate for resolution
+	if (height <= 360) bitrate = 1;
+	else if (height <= 576) bitrate = 2;
+	else if (height <= 720) bitrate = 3;
+	else if (height <= 1080) bitrate = 4;
+	else bitrate = 5;
+
+	if (bitrate > 0) {
 		g_print("bitrate: %d Mbps\n", bitrate);
 		g_object_set(enc, "bitrate", bitrate * 1000000, NULL);
 	} else {
@@ -290,6 +284,7 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 		ret = NULL;
 		goto done;
 	}
+	
 	// }else {
 	// 	g_print("bitrate: %d Mb\n", DEFAULT_BIT_RATE_PROFILE/1000000);
 	// 	g_object_set(enc, "bitrate", DEFAULT_BIT_RATE_PROFILE, NULL);
@@ -306,10 +301,6 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	// 	g_print("Set iframeinterval to: %d\n", iframeinterval);
 	// 	g_object_set(enc, "iframeinterval", iframeinterval, NULL);
 	// }
-#else
-	// fixed mode
-	// g_object_set(enc, "bitrate", DEFAULT_BIT_RATE_PROFILE, NULL);
-#endif
 
 #ifdef __CHANGE_RESOLUION
 
@@ -448,12 +439,12 @@ int parse_streams_from_json (json jsonData) {
 		transcoding_stream[stream_count].stream = (gchar*)uri_str[stream_count].data();
 
 		// Parse bitrate
-		try {
-			transcoding_stream[stream_count].bitrate = stoi(arr.at("bitrate").get<string>());
-		} catch (const exception& e) {
-			cout << e.what() << ". Using camera bitrate setting.\n";
-			transcoding_stream[stream_count].bitrate = 0;
-		}
+		// try {
+		// 	transcoding_stream[stream_count].bitrate = stoi(arr.at("bitrate").get<string>());
+		// } catch (const exception& e) {
+		// 	cout << e.what() << ". Using camera bitrate setting.\n";
+		// 	transcoding_stream[stream_count].bitrate = 0;
+		// }
 
 		// Parse resolution
 		try {
@@ -484,8 +475,7 @@ int parse_streams_from_json (json jsonData) {
 			return -1;
 		}
 		cout << "URL: '" << transcoding_stream[i].stream 
-			<< "', bitrate: " << transcoding_stream[i].bitrate 
-			<< " Mbps, input codec: " << transcoding_stream[i].inputCodec 
+			<< ", input codec: " << transcoding_stream[i].inputCodec 
 			<< ", output codec: " << transcoding_stream[i].outputCodec 
 			<< ", resolution: " << transcoding_stream[i].width << "x" << transcoding_stream[i].height 
 			<< endl;
