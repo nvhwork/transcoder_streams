@@ -2,56 +2,56 @@
 	"port":"8550",
 	"streams":[
 		{
-			"stream_uri":"rtsp://192.168.10.101",
-			"output_codec":"H.264",
+			"camera_name":"ipcam1",
+			"codec":"H.264",
 			"width":"1280",
 			"height":"720"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.101",
-			"output_codec":"H.265",
+			"camera_name":"ipcam1",
+			"codec":"H.265",
 			"width":"640",
 			"height":"360"
 		},
 		{
-			"stream_uri":"http://admin:secam123@192.168.10.101",
-			"output_codec":"H.264",
+			"camera_name":"ipcam1",
+			"codec":"H.264",
 			"width":"1280",
 			"height":"720"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
-			"output_codec":"H.264",
+			"camera_name":"ipcam2",
+			"codec":"H.264",
 			"width":"1280",
 			"height":"720"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.102",
-			"output_codec":"H.265",
+			"camera_name":"ipcam2",
+			"codec":"H.265",
 			"width":"1920",
 			"height":"1080"
 		},
 		{
-			"stream_uri":"rtsp:/admin:secam123@192.168.10.35",
-			"output_codec":"H.264",
+			"camera_name":"ipcam2",
+			"codec":"H.264",
 			"width":"1024",
 			"height":"576"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.103",
-			"output_codec":"H.265",
+			"camera_name":"ipcam3",
+			"codec":"H.265",
 			"width":"1280",
 			"height":"720"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.103",
-			"output_codec":"H.265",
+			"camera_name":"ipcam3",
+			"codec":"H.265",
 			"width":"640",
 			"height":"360"
 		},
 		{
-			"stream_uri":"rtsp://admin:secam123@192.168.10.103",
-			"output_codec":"H.264",
+			"camera_name":"ipcam3",
+			"codec":"H.264",
 			"width":"1920",
 			"height":"1080"
 		}

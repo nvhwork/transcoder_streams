@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <vector>
 #include <glib.h>
 #include <gio/gnetworking.h>
 #include <gst/gst.h>
@@ -20,6 +21,7 @@ static gchar *stream_config_file =NULL;
 
 int main(int argc, char *argv[]) {
 	int num_of_streams;
+	vector<string> paths;
 	GMainLoop *loop;
 	GstRTSPServer *server;
 	GstRTSPMountPoints *mounts;
@@ -100,26 +102,40 @@ int main(int argc, char *argv[]) {
 	// 	makeAuth(factory, server);
 	// }
 	
-	for (int i = 1; i <= num_of_streams; i++){
-		char init_uri[] = "/stream-";
-		string s = to_string(i);
-		char *index = (char*) s.c_str();
-		gst_rtsp_mount_points_add_factory(mounts, (const gchar*)strcat(init_uri, index), factory);
+	// Set up database
+	sql::Driver *driver;
+	sql::Connection *conn;
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+
+	// Create a connection
+	driver = get_driver_instance();
+	conn = driver->connect("localhost", "hoangnv", "bkcs2022");
+	conn->setSchema("transcoding"); // database name
+	stmt = conn->createStatement();
+	res = stmt->executeQuery("SELECT stream_path FROM streams;");
+	while (res->next()) {
+		string pathStr = res->getString(1);
+		gst_rtsp_mount_points_add_factory(mounts, (const gchar*) pathStr.c_str(), factory);
+		paths.push_back(pathStr);
 	}
+
+	delete res;
+	delete stmt;
+	delete conn;
 
 	g_object_unref(mounts);
 	g_signal_connect(server, "client-connected", G_CALLBACK(on_client_connected), NULL);
 	gst_rtsp_server_attach(server, NULL);
 
 	service = gst_rtsp_server_get_service(server);
+
 	g_print("\nStream ready at:\n");
-	for (int i = 1; i <= num_of_streams; i++) {
-		char init_uri[] = "/stream-";
-		string s = to_string(i);
-		char *index = (char*) s.c_str(); 
-		cout << "rtsp://0.0.0.0:" << service << strcat(init_uri, index) << endl;
+	for (int i = 0; i < paths.size(); i++) {
+		cout << "rtsp://0.0.0.0:" << service << paths[i] << endl;
 	}
 	cout << endl;
+
 	g_free(service);
 	g_main_loop_run(loop);
 	return 0;

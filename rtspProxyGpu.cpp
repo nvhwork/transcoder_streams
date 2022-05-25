@@ -17,6 +17,7 @@
 * Boston, MA 02110-1301, USA.
 */
 #include <iostream>
+#include <string>
 #include <glib.h>
 #include <gst/gst.h>
 #include "json.hpp"
@@ -60,8 +61,8 @@ static int rc_mode = VIDENC_CONSTANT_BITRATE;
 static int stream_count = 0;
 
 string uri_str[MAX_STREAM];
-gchar * input_codec_str[MAX_STREAM];
-string output_codec_str[MAX_STREAM];
+gchar * inputCodec_str[MAX_STREAM];
+string outputCodec_str[MAX_STREAM];
 
 struct Stream {
 	gchar *stream = NULL;
@@ -187,11 +188,12 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	char format[100] = "video/x-raw,format=(string)RGBA,width=(int)%d,height=(int)%d";
 	char filter[120];
 	gchar *path = NULL;
-	string input_codec, output_codec;
+	int width, height;
+	string inputCodec, outputCodec, streamUrl;
 	GstElement *parse, *pay, *onvifts, *enc, *dec, *src, *depay, *scale, *buffer;
-	GstElement *cap_filter1,*cap_filter;
+	GstElement *cap_filter1, *cap_filter;
 	GstCaps *caps = NULL, *caps1 = NULL, *convertCaps = NULL;
-	GstElement *nvvidconv,*nvvidconv1;
+	GstElement *nvvidconv, *nvvidconv1;
 	GstCapsFeatures *feature = NULL;
 	GstCapsFeatures *feature1 = NULL;
 	GstElement *ret = gst_bin_new(NULL);
@@ -199,52 +201,59 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	GstPad *sinkpad, *srcpad;
 	gchar *camId = NULL;
 	guint64 timestamp;
-	gchar* streamUrl;
-	gint bitrate = 0 ;
-	int stream_index = -1;
-	int width, height;
+	gint bitrate = 0;
 
+	// Set up database
+	sql::Driver *driver;
+	sql::Connection *conn;
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+
+	// Create a connection
+	driver = get_driver_instance();
+	conn = driver->connect("localhost", "hoangnv", "bkcs2022");
+	conn->setSchema("transcoding"); // database name
+	stmt = conn->createStatement();
+
+	string absPath(url->abspath);
 	g_print("Abs path: %s\n", url->abspath);
-	
-	for(int i = 1; i <= stream_count; i++){
-		char init_uri[] ="/stream-";
-		string s = to_string(i);
-		char *index =(char*) s.c_str();
-		if(!g_strcmp0(url->abspath, (const gchar*)strcat(init_uri,index))) stream_index = i-1;
-	}
-	if(stream_index<0) goto fail;
+	res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name WHERE streams.stream_path = '" + absPath + "';");
 
-	streamUrl =transcoding_stream[stream_index].stream;
-	input_codec = string(transcoding_stream[stream_index].inputCodec);
-	output_codec = string(transcoding_stream[stream_index].outputCodec);
-	height = transcoding_stream[stream_index].height;
-	width = transcoding_stream[stream_index].width;
-	// bitrate = transcoding_stream[stream_index].bitrate;
+	if (!res->next()) {
+		goto fail;
+	}
+	do {
+		streamUrl = res->getString("camera_url");
+		inputCodec = res->getString("camera_codec");
+		outputCodec = res->getString("stream_codec");
+		width = res->getInt("stream_width");
+		height = res->getInt("stream_height");
+	} while (res->next());
 
 	// Make video part
 	// rtspsrc ! rtph264depay ! nvv4l2decoder ! nvv4l2h264enc ! rtph264pay
-	if (input_codec.find("H.264") != string::npos && output_codec.find("H.264") != string::npos) {
+	if (inputCodec.find("H.264") != string::npos && outputCodec.find("H.264") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph264depay", fail, "depay");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h264enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph264pay", fail, NULL);
 
-	} else if (input_codec.find("H.265") != string::npos && output_codec.find("H.265") != string::npos) {
+	} else if (inputCodec.find("H.265") != string::npos && outputCodec.find("H.265") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph265depay", fail, "depay");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h265enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph265pay", fail, NULL);
 
-	} else if (input_codec.find("H.264") != string::npos && output_codec.find("H.265") != string::npos) {
+	} else if (inputCodec.find("H.264") != string::npos && outputCodec.find("H.265") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph264depay", fail, "depay");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
 		MAKE_AND_ADD(enc, pbin, "nvv4l2h265enc", fail, NULL);
 		MAKE_AND_ADD(pay, pbin, "rtph265pay", fail, NULL);
 
-	} else if (input_codec.find("H.265") != string::npos && output_codec.find("H.264") != string::npos) {
+	} else if (inputCodec.find("H.265") != string::npos && outputCodec.find("H.264") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph265depay", fail, "depay");
 		MAKE_AND_ADD(dec, pbin, "nvv4l2decoder", fail, NULL);
@@ -257,12 +266,12 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 	g_signal_connect(src, "pad-added", G_CALLBACK(pad_added_cb), depay);
 
-	if (!streamUrl) {
+	if (streamUrl.empty()) {
 		g_print("Error: Stream is NULL\n");
 	} else {
-		g_print("Connect to %s, codec: %s, ", streamUrl, input_codec.c_str());
+		g_print("Connect to %s, codec: %s, ", streamUrl.c_str(), inputCodec.c_str());
 	}
-	g_object_set(src, "location", streamUrl, NULL);
+	g_object_set(src, "location", (gchar*) streamUrl.c_str(), NULL);
 	g_object_set(G_OBJECT (src), "latency", 1000, NULL);
 	g_object_set(G_OBJECT (src), "drop-on-latency", TRUE, NULL);
 	
@@ -304,12 +313,12 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 #ifdef __CHANGE_RESOLUION
 
-	if (width > 0 && height > 0){
+	if (width > 0 && height > 0) {
 		printf("Set scale width: %d, height: %d\n", width, height);
 
 		MAKE_AND_ADD(scale, pbin, "nvstreammux", fail, NULL);
-		g_object_set(G_OBJECT(scale), "height", height, NULL);
 		g_object_set(G_OBJECT(scale), "width", width, NULL);
+		g_object_set(G_OBJECT(scale), "height", height, NULL);
 		g_object_set(G_OBJECT(scale), "batch-size", 1, NULL);
 
 		if (!link_element_to_streammux_sink_pad(scale, dec, 0)) {
@@ -345,6 +354,9 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 done:
 	g_free(path);
+	delete res;
+	delete stmt;
+	delete conn;
 	return ret;
 
 fail:
@@ -354,8 +366,8 @@ fail:
 	goto done;
 }
 
-static void onvif_factory_class_init(OnvifFactoryClass * klass) {
-	GstRTSPMediaFactoryClass *mf_class = GST_RTSP_MEDIA_FACTORY_CLASS(klass);
+static void onvif_factory_class_init(OnvifFactoryClass * factory_class) {
+	GstRTSPMediaFactoryClass *mf_class = GST_RTSP_MEDIA_FACTORY_CLASS(factory_class);
 	//mf_class->create_element = onvif_factory_create_element;
 	mf_class->create_element = rtsp_create_element;
 }
@@ -405,81 +417,88 @@ void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointe
 
 
 int parse_streams_from_json (json jsonData) {
-	// Access fields from JSON object
-	for(auto &arr: jsonData["streams"]){
-		uri_str[stream_count] = arr.at("stream_uri").get<string>();
-		if (!validate_url(uri_str[stream_count])) {
-			cout << "Discovering '" << uri_str[stream_count] << "'" << endl
-				<< "Discoverer error: URL is not of RTSP type, or wrong format" << endl
-				<< "This URI cannot be played" << endl << "Finish discovering" << endl
-				<< "Input video codec not found!" << endl << endl;
-			continue;
-		}
+	/* Set up database */
+	sql::Driver *driver;
+	sql::Connection *conn;
+	sql::Statement *stmt;
+	sql::ResultSet *res;
 
-		// Parse input codec
-		input_codec_str[stream_count] = get_video_codec(uri_str[stream_count]);
-		if (input_codec_str[stream_count] != NULL) {
-			transcoding_stream[stream_count].inputCodec = input_codec_str[stream_count];
-			cout << "Found video codec: " << input_codec_str[stream_count] << endl << endl;
-		} else {
-			g_printerr("Input video codec not found!\n\n");
+	// Create a connection
+	driver = get_driver_instance();
+	conn = driver->connect("localhost", "hoangnv", "bkcs2022");
+	conn->setSchema("transcoding"); // database name
+	stmt = conn->createStatement();
+	stmt->execute("DELETE FROM streams"); // Remove later
+
+	/* Access fields from JSON object */
+	unsigned long long pathIdRange = PATH_ID_UPPER_BOUND - PATH_ID_LOWER_BOUND + 1;
+	for (auto &arr: jsonData["streams"]){
+		int streamWidth, streamHeight;
+		string streamPath, streamInputCamera, streamCodec;
+
+		// Parse stream input camera name
+		streamInputCamera = arr.at("camera_name").get<string>();
+		res = stmt->executeQuery("SELECT camera_url FROM cameras WHERE camera_name = '" + streamInputCamera + "'");
+		if (!res->next()) {
+			cerr << "\tCamera not found" << endl;
 			continue;
 		}
 
 		// Parse output codec
-		output_codec_str[stream_count] = arr.at("output_codec").get<string>();
-		if (input_codec_str[stream_count] != NULL) {
-			transcoding_stream[stream_count].outputCodec = (gchar*)output_codec_str[stream_count].data();
-		} else {
+		streamCodec = arr.at("codec").get<string>();
+		if (streamCodec.empty()) {
 			g_printerr("Output video codec not found!\n\n");
 			continue;
 		}
-		
-		// Parse stream
-		transcoding_stream[stream_count].stream = (gchar*)uri_str[stream_count].data();
-
-		// Parse bitrate
-		// try {
-		// 	transcoding_stream[stream_count].bitrate = stoi(arr.at("bitrate").get<string>());
-		// } catch (const exception& e) {
-		// 	cout << e.what() << ". Using camera bitrate setting.\n";
-		// 	transcoding_stream[stream_count].bitrate = 0;
-		// }
 
 		// Parse resolution
 		try {
-			transcoding_stream[stream_count].width = stoi(arr.at("width").get<string>());
+			streamWidth = stoi(arr.at("width").get<string>());
 		} catch (const exception& e) {
 			cout << e.what() << ". Using camera resolution setting.\n";
-			transcoding_stream[stream_count].width = 0;
 		}
 
 		try {
-			transcoding_stream[stream_count].height = stoi(arr.at("height").get<string>());
+			streamHeight = stoi(arr.at("height").get<string>());
 		} catch (const exception& e) {
 			cout << e.what() << ". Using camera resolution setting.\n";
-			transcoding_stream[stream_count].height=0;
 		}
+
+		// Generate path
+		unsigned long long pathId = rand() % pathIdRange + PATH_ID_LOWER_BOUND;
+		streamPath = "/" + streamInputCamera + "/" + to_string(pathId);
 		
+		// Add to database
+		stmt->execute("INSERT INTO streams(stream_path, stream_input_camera, stream_width, stream_height, stream_codec) VALUES ('" 
+				+ streamPath + "', '" + streamInputCamera + "', " + to_string(streamWidth) + ", " + to_string(streamHeight) + ", '" + streamCodec + "');");
+
 		stream_count++;
 	}
+
 
 	if (stream_count <= 0) {
 		g_printerr("NO INPUT STREAMS FOUND!\n");
 		return -1;
 	}
 
-	for (int i = 0; i < stream_count; i++){
-		if (transcoding_stream[i].stream == NULL || transcoding_stream[i].outputCodec == NULL){
-			g_printerr("Parsing setting file failed!\n");
-			return -1;
-		}
-		cout << "URL: '" << transcoding_stream[i].stream 
-			<< ", input codec: " << transcoding_stream[i].inputCodec 
-			<< ", output codec: " << transcoding_stream[i].outputCodec 
-			<< ", resolution: " << transcoding_stream[i].width << "x" << transcoding_stream[i].height 
-			<< endl;
+	res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name;");
+
+	if (!res->next()) {
+		cerr << "Parsing setting file failed!" << endl;
 	}
+	do {
+		cout << "URL: '" << res->getString("camera_url") 
+			<< ", input codec: " << res->getString("camera_codec") 
+			<< ", output codec: " << res->getString("stream_codec") 
+			<< ", resolution: " << res->getInt("stream_width") << "x" << res->getInt("stream_height")
+			<< endl;
+	} while (res->next());
+
+
+	// Free MySQL variables
+	delete res;
+	delete stmt;
+	delete conn;
 
 	return stream_count;
 }
