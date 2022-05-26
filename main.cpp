@@ -19,16 +19,9 @@ using namespace std;
 static gchar *port = NULL;
 static gchar *stream_config_file =NULL;
 
-int main(int argc, char *argv[]) {
-	int num_of_streams;
-	vector<string> paths;
-	GMainLoop *loop;
-	GstRTSPServer *server;
-	GstRTSPMountPoints *mounts;
-	GstRTSPMediaFactory *factory;
+json get_stream_from_input(int argc, char *argv[]) {
 	GOptionContext *optctx;
 	GError *error = NULL;
-	gchar *service;
 	GOptionEntry entries[] = {
 		//{ "rtsp-port", 'p', 0, G_OPTION_ARG_STRING, &port, "RTSP server port", NULL },
 		//{ "stream-1", 's', 0,  G_OPTION_ARG_STRING, &stream1, "rtsp stream to proxies 1", NULL },
@@ -58,11 +51,13 @@ int main(int argc, char *argv[]) {
 		g_printerr("Error parsing options: %s\n", error->message);
 		g_option_context_free(optctx);
 		g_clear_error(&error);
-		return -1;
+		return NULL;
 	}
+
+	g_option_context_free(optctx);
 	if (stream_config_file == NULL){
 		g_print("Config file not set.\n");
-		return 1;
+		return NULL;
 	}
 
 	// Read the JSON file
@@ -70,21 +65,34 @@ int main(int argc, char *argv[]) {
     json jsonData; // Create JSON object
     f >> jsonData; // Initialize JSON object with what was read from file
 
+	return jsonData;
+}
+
+int main(int argc, char *argv[]) {
+	int num_of_streams;
+	vector<string> paths;
+	GMainLoop *loop;
+	GstRTSPServer *server;
+	GstRTSPMountPoints *mounts;
+	GstRTSPMediaFactory *factory;
+	gchar *service;
+
+	json jsonData = get_stream_from_input(argc, argv);
+	if (jsonData == NULL) return -1;
+
 	string str = jsonData.at("port").get<string>();
 	vector<char> chars(str.c_str(), str.c_str() + str.size() + 1u);
-	port=&chars[0];
+	port = &chars[0];
 
 	if (port == 0) {
 		g_printerr("RTSP Port not setted.\n");
-		return 1;
+		return -1;
 	}
 	
-	num_of_streams = parse_streams_from_json(jsonData);
+	num_of_streams = parse_stream_from_json(jsonData);
 	if (num_of_streams <= 0) {
-		return 1;
+		return -1;
 	}
-
-	g_option_context_free(optctx);
 
 	GST_DEBUG_CATEGORY_INIT(onvif_server_debug, "onvif-server", 0, "ONVIF server");
 

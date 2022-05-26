@@ -1,13 +1,8 @@
-#include <iostream>
-#include <regex>
-#include <string.h>
-#include <glib.h>
-#include <gst/gst.h>
-#include <gst/pbutils/pbutils.h>
 #include "checkStream.hpp"
 
 #define TIME_LIMIT_DISCOVER 30*GST_SECOND
 
+using json = nlohmann::json;
 using namespace std;
 
 gchar * codec = NULL;
@@ -143,11 +138,11 @@ static void on_finished_cb (GstDiscoverer * discoverer, CustomData * data) {
 	g_main_loop_quit (data->loop);
 }
 
-gchar * get_video_codec (string url) {
+json get_camera_info (string url) {
 	CustomData data;
 	GError *err = NULL;
 	const gchar * uri = url.c_str();
-	gchar * resultCodec;
+	json result;
 
 	/* Initialize cumstom data structure */
 	memset (&data, 0, sizeof (data));
@@ -190,8 +185,13 @@ gchar * get_video_codec (string url) {
 	g_object_unref (data.discoverer);
 	g_main_loop_unref (data.loop);
 
-	/* Return result of video codec */
-	resultCodec = g_strdup(codec);
+	/* Return result camera information */
+	if (codec == NULL) return NULL;
+	result = {
+		{"codec", codec},
+		{"width", width},
+		{"height", height}
+	};
 	g_free(codec);
 
 	/* Test print out video information */
@@ -201,5 +201,5 @@ gchar * get_video_codec (string url) {
 			<< "Framerate: " << framerate_num << "/" << framerate_denom << endl
 			<< "Resolution: " << width << "x" << height << endl; 
 	}
-	return resultCodec;
+	return result;
 }

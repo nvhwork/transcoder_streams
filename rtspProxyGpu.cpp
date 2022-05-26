@@ -16,13 +16,6 @@
 * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 * Boston, MA 02110-1301, USA.
 */
-#include <iostream>
-#include <string>
-#include <glib.h>
-#include <gst/gst.h>
-#include "json.hpp"
-#include "server0audio.hpp"
-#include "checkStream.hpp"
 #include "rtspProxyGpu.hpp"
 
 using json = nlohmann::json;
@@ -416,7 +409,7 @@ void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointe
 }
 
 
-int parse_streams_from_json (json jsonData) {
+int parse_stream_from_json (json jsonData) {
 	/* Set up database */
 	sql::Driver *driver;
 	sql::Connection *conn;

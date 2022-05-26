@@ -1,4 +1,3 @@
 .vscode
-transcoder*
-sysMon
+*.o
 db*
