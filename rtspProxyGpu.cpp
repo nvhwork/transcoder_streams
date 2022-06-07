@@ -210,7 +210,11 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 	string absPath(url->abspath);
 	g_print("Abs path: %s\n", url->abspath);
-	res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name WHERE streams.stream_path = '" + absPath + "';");
+
+	string stmtSelect = "SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height";
+	string stmtFromJoin = "FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name WHERE streams.stream_path = '";
+	string stmtFull = stmtSelect + stmtFromJoin + absPath + "';";
+	res = stmt->executeQuery(stmtFull);
 
 	if (!res->next()) {
 		goto fail;
@@ -474,18 +478,18 @@ int parse_stream_from_json (json jsonData) {
 		return -1;
 	}
 
-	res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name;");
+	// res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name;");
 
-	if (!res->next()) {
-		cerr << "Parsing setting file failed!" << endl;
-	}
-	do {
-		cout << "URL: '" << res->getString("camera_url") 
-			<< ", input codec: " << res->getString("camera_codec") 
-			<< ", output codec: " << res->getString("stream_codec") 
-			<< ", resolution: " << res->getInt("stream_width") << "x" << res->getInt("stream_height")
-			<< endl;
-	} while (res->next());
+	// if (!res->next()) {
+	// 	cerr << "Parsing setting file failed!" << endl;
+	// }
+	// do {
+	// 	cout << "URL: '" << res->getString("camera_url") 
+	// 		<< ", input codec: " << res->getString("camera_codec") 
+	// 		<< ", output codec: " << res->getString("stream_codec") 
+	// 		<< ", resolution: " << res->getInt("stream_width") << "x" << res->getInt("stream_height")
+	// 		<< endl;
+	// } while (res->next());
 
 
 	// Free MySQL variables

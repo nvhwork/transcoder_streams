@@ -17,7 +17,7 @@ using json = nlohmann::json;
 using namespace std;
 
 static gchar *port = NULL;
-static gchar *stream_config_file =NULL;
+static gchar *stream_config_file = NULL;
 
 json get_stream_from_input(int argc, char *argv[]) {
 	GOptionContext *optctx;
@@ -77,29 +77,29 @@ int main(int argc, char *argv[]) {
 	GstRTSPMediaFactory *factory;
 	gchar *service;
 
-	json jsonData = get_stream_from_input(argc, argv);
-	if (jsonData == NULL) return -1;
+	// json jsonData = get_stream_from_input(argc, argv);
+	// if (jsonData == NULL) return -1;
 
-	string str = jsonData.at("port").get<string>();
-	vector<char> chars(str.c_str(), str.c_str() + str.size() + 1u);
-	port = &chars[0];
+	// string str = jsonData.at("port").get<string>();
+	// vector<char> chars(str.c_str(), str.c_str() + str.size() + 1u);
+	// port = &chars[0];
 
-	if (port == 0) {
-		g_printerr("RTSP Port not setted.\n");
-		return -1;
-	}
+	// if (port == 0) {
+	// 	g_printerr("RTSP Port not setted.\n");
+	// 	return -1;
+	// }
 	
-	num_of_streams = parse_stream_from_json(jsonData);
-	if (num_of_streams <= 0) {
-		return -1;
-	}
+	// num_of_streams = parse_stream_from_json(jsonData);
+	// if (num_of_streams <= 0) {
+	// 	return -1;
+	// }
 
 	GST_DEBUG_CATEGORY_INIT(onvif_server_debug, "onvif-server", 0, "ONVIF server");
 
 	loop = g_main_loop_new(NULL, FALSE);
 	
 	server = gst_rtsp_onvif_server_new();
-	gst_rtsp_server_set_service(server, port);
+	gst_rtsp_server_set_service(server, "8550");
 	mounts = gst_rtsp_server_get_mount_points(server);
 
 	// Create facory
