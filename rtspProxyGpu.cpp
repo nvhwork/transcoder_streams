@@ -210,8 +210,8 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 	string absPath(url->abspath);
 	g_print("Abs path: %s\n", url->abspath);
-
-	string stmtSelect = "SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height";
+	
+	string stmtSelect = "SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height ";
 	string stmtFromJoin = "FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name WHERE streams.stream_path = '";
 	string stmtFull = stmtSelect + stmtFromJoin + absPath + "';";
 	res = stmt->executeQuery(stmtFull);
@@ -322,12 +322,12 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 			g_print("Link steammux false\n");
 			goto fail;
 		}	
-		if (!gst_element_link_many(scale, enc, pay ,NULL)) {
+		if (!gst_element_link_many(scale, enc, pay, NULL)) {
 			g_print("Link filter false\n");
 			goto fail;
 		}
 	} else {
-		if (!gst_element_link_many(dec, enc, pay , NULL)) {
+		if (!gst_element_link_many(dec, enc, pay, NULL)) {
 			g_print("Link dec enc false\n");
 			goto fail;
 		}
@@ -367,13 +367,13 @@ static void onvif_factory_class_init(OnvifFactoryClass * factory_class) {
 	GstRTSPMediaFactoryClass *mf_class = GST_RTSP_MEDIA_FACTORY_CLASS(factory_class);
 	//mf_class->create_element = onvif_factory_create_element;
 	mf_class->create_element = rtsp_create_element;
+	g_print("***INIT ONVIF FACTORY CLASS***\n");
 }
  
 GstRTSPMediaFactory * onvif_factory_new(void) {
 	GstRTSPMediaFactory *result;
 
-	result =
-		GST_RTSP_MEDIA_FACTORY(g_object_new(onvif_factory_get_type(), NULL));
+	result = GST_RTSP_MEDIA_FACTORY(g_object_new(onvif_factory_get_type(), NULL));
 
 	return result;
 }
@@ -410,92 +410,4 @@ void on_client_connected(GstRTSPServer * server, GstRTSPClient * client, gpointe
 	//GstRTSPConnection *conn = gst_rtsp_client_get_connection(client);
 	//GstRTSPUrl *url = gst_rtsp_connection_get_url(conn);
 	//g_print("Abs path: %s\n", gst_rtsp_url_get_request_uri(url));
-}
-
-
-int parse_stream_from_json (json jsonData) {
-	/* Set up database */
-	sql::Driver *driver;
-	sql::Connection *conn;
-	sql::Statement *stmt;
-	sql::ResultSet *res;
-
-	// Create a connection
-	driver = get_driver_instance();
-	conn = driver->connect("localhost", "hoangnv", "bkcs2022");
-	conn->setSchema("transcoding"); // database name
-	stmt = conn->createStatement();
-	stmt->execute("DELETE FROM streams"); // Remove later
-
-	/* Access fields from JSON object */
-	unsigned long long pathIdRange = PATH_ID_UPPER_BOUND - PATH_ID_LOWER_BOUND + 1;
-	for (auto &arr: jsonData["streams"]){
-		int streamWidth, streamHeight;
-		string streamPath, streamInputCamera, streamCodec;
-
-		// Parse stream input camera name
-		streamInputCamera = arr.at("camera_name").get<string>();
-		res = stmt->executeQuery("SELECT camera_url FROM cameras WHERE camera_name = '" + streamInputCamera + "'");
-		if (!res->next()) {
-			cerr << "\tCamera not found" << endl;
-			continue;
-		}
-
-		// Parse output codec
-		streamCodec = arr.at("codec").get<string>();
-		if (streamCodec.empty()) {
-			g_printerr("Output video codec not found!\n\n");
-			continue;
-		}
-
-		// Parse resolution
-		try {
-			streamWidth = stoi(arr.at("width").get<string>());
-		} catch (const exception& e) {
-			cout << e.what() << ". Using camera resolution setting.\n";
-		}
-
-		try {
-			streamHeight = stoi(arr.at("height").get<string>());
-		} catch (const exception& e) {
-			cout << e.what() << ". Using camera resolution setting.\n";
-		}
-
-		// Generate path
-		unsigned long long pathId = rand() % pathIdRange + PATH_ID_LOWER_BOUND;
-		streamPath = "/" + streamInputCamera + "/" + to_string(pathId);
-		
-		// Add to database
-		stmt->execute("INSERT INTO streams(stream_path, stream_input_camera, stream_width, stream_height, stream_codec) VALUES ('" 
-				+ streamPath + "', '" + streamInputCamera + "', " + to_string(streamWidth) + ", " + to_string(streamHeight) + ", '" + streamCodec + "');");
-
-		stream_count++;
-	}
-
-
-	if (stream_count <= 0) {
-		g_printerr("NO INPUT STREAMS FOUND!\n");
-		return -1;
-	}
-
-	// res = stmt->executeQuery("SELECT cameras.camera_url, cameras.camera_codec, streams.stream_codec, streams.stream_width, streams.stream_height FROM streams INNER JOIN cameras ON streams.stream_input_camera = cameras.camera_name;");
-
-	// if (!res->next()) {
-	// 	cerr << "Parsing setting file failed!" << endl;
-	// }
-	// do {
-	// 	cout << "URL: '" << res->getString("camera_url") 
-	// 		<< ", input codec: " << res->getString("camera_codec") 
-	// 		<< ", output codec: " << res->getString("stream_codec") 
-	// 		<< ", resolution: " << res->getInt("stream_width") << "x" << res->getInt("stream_height")
-	// 		<< endl;
-	// } while (res->next());
-
-
-	// Free MySQL variables
-	delete res;
-	delete stmt;
-	delete conn;
-
-	return stream_count;
 }

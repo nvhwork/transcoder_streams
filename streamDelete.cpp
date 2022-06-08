@@ -3,10 +3,10 @@
 using json = nlohmann::json;
 using namespace std;
 
-int delete_camera(json arr) {
+int delete_stream(json arr) {
 	int returnRes;
-	string cameraName = arr.at("camera_name").get<string>();
-
+	string absPath = arr.at("stream_path").get<string>();
+	
 	/* Set up database */
 	sql::Driver *driver;
 	sql::Connection *conn;
@@ -20,13 +20,13 @@ int delete_camera(json arr) {
 	stmt = conn->createStatement();
 
 	// Check whether the camera name exists in the database
-	res = stmt->executeQuery("SELECT camera_name FROM cameras WHERE camera_name = '" + cameraName + "';");
+	res = stmt->executeQuery("SELECT stream_path FROM streams WHERE stream_path = '" + absPath + "';");
 	if (!res->next()) {
-		cerr << "Camera not found" << endl;
+		cerr << "Stream not found" << endl;
 		returnRes = -1;
 	} else {
 		// Delete the row from database
-		stmt->execute("DELETE FROM cameras WHERE camera_name = '" + cameraName + "';");
+		stmt->execute("DELETE FROM streams WHERE stream_path = '" + absPath + "';");
 		returnRes = 0;
 	}
 
@@ -43,14 +43,13 @@ int main(int argc, char *argv[]) {
 	}
 	json input;
 	string file = argv[1];
-	string cameraName;
 	int returnRes;
 
 	/* Get input from JSON */
 	input = get_data_from_input(file);
 
 	/* Add camera */
-	returnRes = delete_camera(input);
+	returnRes = delete_stream(input);
 
 	return returnRes;
 }

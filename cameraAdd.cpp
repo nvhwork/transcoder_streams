@@ -1,25 +1,7 @@
-#include "cameraManage.hpp"
+#include "dataManage.hpp"
 
 using json = nlohmann::json;
 using namespace std;
-
-json get_camera_from_input(string url) {
-	// Get JSON data from server
-	string getCmd = "http get " + url + "/cameras/1 --output temp/camera.json";
-	system(getCmd.c_str());
-
-	// Read the JSON file
-	ifstream f("temp/camera.json", ifstream::in);
-	json jsonData; // Create JSON object
-	f >> jsonData; // Initialize JSON object with what was read from file
-
-	// Delete JSON file and data at server side
-	string deleteCmd = "http delete " + url + "/cameras/1";
-	system(deleteCmd.c_str());
-	system("rm temp/camera.json");
-
-	return jsonData;
-}
 
 /**
  * @brief Parse camera information from JSON input
@@ -29,7 +11,7 @@ json get_camera_from_input(string url) {
  * 				-1 - Invalid URL type
  * 				-2 - URL does not contain video stream
  * 				-3 - Camera already exists in the system
- * 				-4 - No URL found
+ * 				-4 - No JSON file found
  */
 int add_camera(json arr) {
 	/* Access fields from JSON object */
@@ -105,15 +87,15 @@ int add_camera(json arr) {
 
 int main(int argc, char *argv[]) {
 	if (argc <= 1) {
-		cerr << "You need to input server IP and port!" << endl;
+		cerr << "You need to input JSON file" << endl;
 		return -4;
 	}
 	json input;
-	string url = argv[1];
+	string file = argv[1];
 	int returnRes;
 
 	/* Get input from JSON */
-	input = get_camera_from_input(url);
+	input = get_data_from_input(file);
 
 	/* Add camera */
 	returnRes = add_camera(input);

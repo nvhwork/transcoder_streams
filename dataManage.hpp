@@ -8,3 +8,5 @@
 
 using json = nlohmann::json;
 using namespace std;
+
+json get_data_from_input(string jsonFile);
