@@ -275,15 +275,14 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	gst_bin_add(GST_BIN(ret), pbin);
 
 	// Set bitrate for resolution
-	if (height <= 360) bitrate = 1;
-	else if (height <= 576) bitrate = 2;
-	else if (height <= 720) bitrate = 3;
-	else if (height <= 1080) bitrate = 4;
-	else bitrate = 5;
+	if (height <= 360) bitrate = 5;
+	else if (height <= 576) bitrate = 10;
+	else if (height <= 720) bitrate = 15;
+	else bitrate = 20;
 
 	if (bitrate > 0) {
-		g_print("bitrate: %d Mbps\n", bitrate);
-		g_object_set(enc, "bitrate", bitrate * 1000000, NULL);
+		g_print("bitrate: %.1f Mbps\n", (double) bitrate/10);
+		g_object_set(enc, "bitrate", bitrate * 100000, NULL);
 	} else {
 		g_print("Error: Invalid value of bitrate\n");
 		gst_object_unref(ret);
