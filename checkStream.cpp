@@ -150,12 +150,12 @@ json get_camera_info (string url) {
 	/* Initialize GStreamer */
 	gst_init (NULL, NULL);
 
-	g_print ("Discovering '%s'\n", uri);
+	g_print ("Discovering '%s'<br>\n", uri);
 
 	/* Instantiate the Discoverer */
 	data.discoverer = gst_discoverer_new (TIME_LIMIT_DISCOVER, &err);
 	if (!data.discoverer) {
-		g_print ("Error creating discoverer instance: %s\n", err->message);
+		g_print ("Error creating discoverer instance: %s<br>\n", err->message);
 		g_clear_error (&err);
 		return NULL;
 	}
@@ -169,7 +169,7 @@ json get_camera_info (string url) {
 
 	/* Add a request to process asynchronously the URI passed through the command line */
 	if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
-		g_print ("Failed to start discovering URI '%s'\n", uri);
+		g_print ("Failed to start discovering URI '%s'<br>\n", uri);
 		g_object_unref (data.discoverer);
 		return NULL;
 	}
@@ -193,13 +193,5 @@ json get_camera_info (string url) {
 		{"height", height}
 	};
 	g_free(codec);
-
-	/* Test print out video information */
-	if (bitrate != -1) {
-		cout << "**********************" << endl << "Bitrate: " << bitrate << " bps" 
-			<< endl << "Max birate: " << bitrate_max << " bps" << endl
-			<< "Framerate: " << framerate_num << "/" << framerate_denom << endl
-			<< "Resolution: " << width << "x" << height << endl; 
-	}
 	return result;
 }

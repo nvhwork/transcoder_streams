@@ -23,7 +23,7 @@ int add_camera(json arr) {
 	cameraUrl = arr.at("camera_url").get<string>();
 
 	if (!validate_url(cameraUrl)) {
-		cerr << "Camera URL is invalid!" << endl;
+		cout << "Camera URL is invalid!" << endl;
 		return -1;
 	}
 
@@ -44,7 +44,7 @@ int add_camera(json arr) {
 	while (res->next()) {
 		string url = res->getString(1);
 		if (url.compare(cameraUrl) == 0) {
-			cerr << "Camera already exists in the system" << endl;
+			cout << "Camera already exists in the system" << endl;
 			delete res;
 			delete stmt;
 			delete conn;
@@ -55,7 +55,7 @@ int add_camera(json arr) {
 	// Get camera information
 	json camInfo = get_camera_info(cameraUrl);
 	if (camInfo == NULL) {
-		cerr << "URL does not contain video stream!" << endl;
+		cout << "URL does not contain video stream!" << endl;
 		return -2;
 	}
 	cameraCodec = camInfo.at("codec").get<string>();
@@ -63,13 +63,13 @@ int add_camera(json arr) {
 	try {
 		cameraWidth = camInfo.at("width").get<int>();
 	} catch (const exception& e) {
-		cerr << e.what() << endl;
+		cout << e.what() << endl;
 	}
 
 	try {
 		cameraHeight = camInfo.at("height").get<int>();
 	} catch (const exception& e) {
-		cerr << e.what() << endl;
+		cout << e.what() << endl;
 	}
 
 	// Add to database
@@ -81,13 +81,13 @@ int add_camera(json arr) {
 	delete stmt;
 	delete conn;
 
-	cout << "\n**********************\n" << "Complete adding camera!" << endl;
+	cout << "<br>\n**********************<br>\n" << "Complete adding camera!<br>" << endl;
 	return 0;
 }
 
 int main(int argc, char *argv[]) {
 	if (argc <= 1) {
-		cerr << "You need to input JSON file" << endl;
+		cout << "You need to input JSON file" << endl;
 		return -4;
 	}
 	json input;

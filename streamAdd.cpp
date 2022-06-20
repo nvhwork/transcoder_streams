@@ -14,7 +14,7 @@ using namespace std;
  */
 int add_stream(json arr) {
 	/* Access fields from JSON object */
-	string streamPath, streamInputCamera, streamCodec, streamWidth, streamHeight;
+	string streamId, streamPath, streamInputCamera, streamCodec, streamWidth, streamHeight;
 	int cameraWidth, cameraHeight;
 
 	/* Set up database */
@@ -71,9 +71,9 @@ int add_stream(json arr) {
 		return -2;
 	}
 
-	// Generate path
-	streamPath = "/" + streamInputCamera + "/" + streamWidth + "x" + streamHeight;
-	res = stmt->executeQuery("SELECT stream_path FROM streams WHERE stream_path = '" + streamPath + "'");
+	// Generate stream ID
+	streamId = streamInputCamera + "_" + streamHeight;
+	res = stmt->executeQuery("SELECT stream_id FROM streams WHERE stream_id = '" + streamId + "'");
 	if (res->next()) {
 		cerr << "Stream configuration has already existed." << endl;
 		delete res;
@@ -81,6 +81,9 @@ int add_stream(json arr) {
 		delete conn;
 		return -3;
 	}
+
+	// Generate path
+	streamPath = "/" + streamInputCamera + "/" + streamWidth + "x" + streamHeight;
 	
 	// Add to database
 	stmt->execute("INSERT INTO streams(stream_path, stream_input_camera, stream_width, stream_height, stream_codec) VALUES ('" 
