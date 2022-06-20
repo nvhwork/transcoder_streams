@@ -78,16 +78,16 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 	result = gst_discoverer_info_get_result (info);
 	switch (result) {
 		case GST_DISCOVERER_URI_INVALID:
-			g_print ("Invalid URI '%s'\n", uri);
+			g_print ("Invalid URI '%s'<br>\n", uri);
 			break;
 		case GST_DISCOVERER_ERROR:
-			g_print ("Discoverer error: %s\n", err->message);
+			g_print ("Discoverer error: %s<br>\n", err->message);
 			break;
 		case GST_DISCOVERER_TIMEOUT:
-			g_print ("Timeout\n");
+			g_print ("Timeout<br>\n");
 			break;
 		case GST_DISCOVERER_BUSY:
-			g_print ("Busy\n");
+			g_print ("Busy<br>\n");
 			break;
 		case GST_DISCOVERER_MISSING_PLUGINS:
 			const GstStructure *s;
@@ -96,16 +96,16 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 			s = gst_discoverer_info_get_misc (info);
 			str = gst_structure_to_string (s);
 
-			g_print ("Missing plugins: %s\n", str);
+			g_print ("Missing plugins: %s<br>\n", str);
 			g_free (str);
 			break;
 		case GST_DISCOVERER_OK:
-			g_print ("Discovered '%s'\n", uri);
+			g_print ("Discovered '%s'<br>\n", uri);
 			break;
 	}
 
 	if (result != GST_DISCOVERER_OK) {
-		g_printerr ("This URI cannot be played\n");
+		g_printerr ("This URI cannot be played<br>\n");
 		codec = NULL;
 		return;
 	}
@@ -124,7 +124,7 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 		height = gst_discoverer_video_info_get_height ((GstDiscovererVideoInfo*) stream->data);
 		width = gst_discoverer_video_info_get_width ((GstDiscovererVideoInfo*) stream->data);
 	} else {
-		cout << endl << "\tNULL error!" << endl;
+		cout << endl << "\tNULL error!<br>" << endl;
 	}
 	gst_discoverer_stream_info_list_free (stream);
 
@@ -133,7 +133,7 @@ static void on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * in
 /* This function is called when the discoverer has finished examining
  * all the URIs we provided.*/
 static void on_finished_cb (GstDiscoverer * discoverer, CustomData * data) {
-	g_print ("Finished discovering\n");
+	g_print ("Finished discovering<br>\n");
 
 	g_main_loop_quit (data->loop);
 }
