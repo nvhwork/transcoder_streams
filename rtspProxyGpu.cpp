@@ -229,6 +229,9 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 
 	// Make video part
 	// rtspsrc ! rtph264depay ! nvv4l2decoder ! nvv4l2h264enc ! rtph264pay
+	/* rtspsrc location="rtsp://admin:secam123@192.168.10.102" ! rtph264depay ! nvv4l2decoder ! 
+	 * m.sink_0 nvstreammux name=m width=1280 height=720 batch-size=1 ! nvv4l2h264enc bitrate=2000000 ! rtph264pay 
+	 */
 	if (inputCodec.find("H.264") != string::npos && outputCodec.find("H.264") != string::npos) {
 		MAKE_AND_ADD(src, ret, "rtspsrc", fail, "rtspsrc");
 		MAKE_AND_ADD(depay, ret, "rtph264depay", fail, "depay");
@@ -275,14 +278,14 @@ static GstElement * rtsp_create_element(GstRTSPMediaFactory * factory, const Gst
 	gst_bin_add(GST_BIN(ret), pbin);
 
 	// Set bitrate for resolution
-	if (height <= 360) bitrate = 5;
-	else if (height <= 576) bitrate = 10;
-	else if (height <= 720) bitrate = 15;
-	else bitrate = 20;
+	if (height <= 360) bitrate = 1;
+	else if (height <= 576) bitrate = 2;
+	else if (height <= 720) bitrate = 3;
+	else bitrate = 4;
 
 	if (bitrate > 0) {
-		g_print("bitrate: %.1f Mbps\n", (double) bitrate/10);
-		g_object_set(enc, "bitrate", bitrate * 100000, NULL);
+		g_print("bitrate: %d Mbps\n", bitrate);
+		g_object_set(enc, "bitrate", bitrate * 1000000, NULL);
 	} else {
 		g_print("Error: Invalid value of bitrate\n");
 		gst_object_unref(ret);

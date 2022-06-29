@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
 	// Create facory
 	factory = onvif_factory_new();
 	gst_rtsp_media_factory_set_media_gtype(factory, GST_TYPE_RTSP_ONVIF_MEDIA);
+	gst_rtsp_media_factory_set_publish_clock_mode(factory, GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET);
 	gst_rtsp_server_set_address(server, "0.0.0.0");
 	// if (username && password) {
 	// 	makeAuth(factory, server);
